@@ -1,5 +1,16 @@
 # Fastly_Cdn Release Notes
 
+## 1.2.33
+
+- Don't cache /customer/section/load. This works around core bug where Cache-Control headers are set to cache https://github.com/fastly/fastly-magento2/pull/111
+- Due to the way Fastly plugin is implemented we are still sending Varnish like purges which don't do anything https://github.com/fastly/fastly-magento2/pull/110. This fixes it so it doesn't send those
+
+## 1.2.32
+
+- Remove errant logging when checking if a feature is enabled or not https://github.com/fastly/fastly-magento2/pull/108
+- Enable long caching of signed assets https://github.com/fastly/fastly-magento2/pull/109
+- Fix for Surrogate Keys not being set on HTML assets when shielding is turned on
+
 ## 1.2.31
 
 - Fix for when adding first entry to an ACL modal is incorrectly displayed https://github.com/fastly/fastly-magento2/pull/105
