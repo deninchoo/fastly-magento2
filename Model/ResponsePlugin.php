@@ -2,7 +2,9 @@
 
 namespace Fastly\Cdn\Model;
 
+use Fastly\Cdn\Helper\CacheTags;
 use Magento\Framework\App\Response\Http;
+use Fastly\Cdn\Model\Config;
 
 /**
  * Fastly CDN for Magento
@@ -26,12 +28,12 @@ use Magento\Framework\App\Response\Http;
 class ResponsePlugin
 {
     /**
-     * @var \Fastly\Cdn\Model\Config
+     * @var Config
      */
     private $config;
 
     /**
-     * @var \Fastly\Cdn\Helper\CacheTags
+     * @var CacheTags
      */
     private $cacheTags;
 
@@ -39,11 +41,11 @@ class ResponsePlugin
      * ResponsePlugin constructor.
      *
      * @param Config $config
-     * @param \Fastly\Cdn\Helper\CacheTags $cacheTags
+     * @param CacheTags $cacheTags
      */
     public function __construct(
-        \Fastly\Cdn\Model\Config $config,
-        \Fastly\Cdn\Helper\CacheTags $cacheTags
+        Config $config,
+        CacheTags $cacheTags
     ) {
         $this->config       = $config;
         $this->cacheTags    = $cacheTags;
@@ -57,7 +59,7 @@ class ResponsePlugin
      * @param array ...$args
      * @return mixed
      */
-    public function aroundSetHeader(Http $subject, callable $proceed, ...$args)
+    public function aroundSetHeader(Http $subject, callable $proceed, ...$args) // @codingStandardsIgnoreLine - unused parameter
     {
         // Is Fastly cache enabled?
         if ($this->config->getType() !== Config::FASTLY) {
@@ -71,8 +73,13 @@ class ResponsePlugin
 
         // Make the necessary adjustment
         $args[1] = $this->cacheTags->convertCacheTags(str_replace(',', ' ', $args[1]));
+        $tagsSize = $this->config->getXMagentoTagsSize();
+        if (strlen($args[1]) > $tagsSize) {
+            $trimmedArgs = substr($args[1], 0, $tagsSize);
+            $args[1] = substr($trimmedArgs, 0, strrpos($trimmedArgs, ' ', -1));
+        }
 
-        // Proeceed
+        // Proceed
         return $proceed(...$args);
     }
 }

@@ -9,28 +9,23 @@ use Magento\Framework\Data\Form\Element\AbstractElement;
 
 class ImageBtn extends Field
 {
-    protected $_template = 'Fastly_Cdn::system/config/form/field/imageBtn.phtml';
+    protected function _construct() // @codingStandardsIgnoreLine - required by parent class
+    {
+        $this->_template = 'Fastly_Cdn::system/config/form/field/imageBtn.phtml';
+
+        parent::_construct();
+    }
 
     /**
-     * @var Config
-     */
-    protected $config;
-
-    /**
-     * ImageBtn constructor.
+     * Remove scope label
      *
-     * @param Config $config
-     * @param Context $context
-     * @param array $data
+     * @param  AbstractElement $element
+     * @return string
      */
-    public function __construct(
-        Config $config,
-        Context $context,
-        array $data = []
-    ) {
-        $this->config = $config;
-
-        parent::__construct($context, $data);
+    public function render(AbstractElement $element)
+    {
+        $element->unsScope()->unsCanUseWebsiteValue()->unsCanUseDefaultValue();
+        return parent::render($element);
     }
 
     /**
@@ -39,7 +34,7 @@ class ImageBtn extends Field
      * @param  AbstractElement $element
      * @return string
      */
-    protected function _getElementHtml(AbstractElement $element)
+    protected function _getElementHtml(AbstractElement $element) // @codingStandardsIgnoreLine - required by parent class
     {
         return $this->_toHtml();
     }
@@ -54,26 +49,19 @@ class ImageBtn extends Field
         return $this->getUrl('adminhtml/fastlyCdn/vcl/serviceinfo');
     }
 
-    public function getState()
-    {
-        return $this->config->isImageOptimizationEnabled();
-    }
-
     /**
-     * Generate upload button html
-     *
-     * @return string
+     * Render Blocking button HTML
+     * @return mixed
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function getButtonHtml()
     {
         $button = $this->getLayout()->createBlock(
             'Magento\Backend\Block\Widget\Button'
-        )->setData(
-            [
-                'id' => 'fastly_push_image_config',
-                'label' => __('Enable/Disable'),
-            ]
-        );
+        )->setData([
+            'id'    => 'fastly_push_image_config',
+            'label' => __('Enable/Disable')
+        ]);
 
         return $button->toHtml();
     }

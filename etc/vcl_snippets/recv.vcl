@@ -69,9 +69,10 @@
         }
     } else {
         # Per suggestions in https://github.com/sdinteractive/SomethingDigital_PageCacheParams
-        # we'll strip out query parameters used in Google AdWords, Mailchimp tracking
+        # we'll strip out query parameters used in Google AdWords, Mailchimp tracking by default
+        # and allow custom parameters to be set
         set req.http.Magento-Original-URL = req.url;
-        set req.url = querystring.regfilter(req.url, "^(utm_.*|gclid|gdftrk|_ga|mc_.*)");
+        set req.url = querystring.regfilter(req.url, "^(####QUERY_PARAMETERS####)");
     }
 
     # Don't allow clients to force a pass
@@ -81,10 +82,11 @@
     
     # Pass on checkout URLs. Because it's a snippet we want to execute this after backend selection so we handle it
     # in the request condition
-    if (req.url ~ "/(catalogsearch|checkout|customer/section/load)") {
+    if (!req.http.x-long-cache && req.url ~ "/(catalogsearch|checkout|customer/section/load)") {
         set req.http.x-pass = "1";
     # Pass all admin actions
-    } else if ( req.url ~ "^/(index\.php/)?admin(_.*)?/" ) {
+    # ####ADMIN_PATH#### is replaced with value of frontName from app/etc/env.php
+    } else if ( req.url ~ "^/(index\.php/)?####ADMIN_PATH####/" ) {
         set req.http.x-pass = "1";
     } else {
         # Sort the query arguments to increase cache hit ratio with query arguments that
@@ -94,7 +96,7 @@
 
 
     # static files are always cacheable. remove SSL flag and cookie
-    if (req.url ~ "^/(pub/)?(media|static)/.*") {
+    if (req.http.x-long-cache || req.url ~ "^/(pub/)?(media|static)/.*") {
         unset req.http.Https;
         unset req.http.Cookie;
     }
