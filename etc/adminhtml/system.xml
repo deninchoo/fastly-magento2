@@ -53,6 +53,10 @@
                         <label><![CDATA[Test credentials]]></label>
                         <frontend_model>Fastly\Cdn\Block\System\Config\Form\Field\TestConnectionBtn</frontend_model>
                     </field>
+                    <field id="pattern_validation" translate="label comment" sortOrder="30" showInDefault="1" showInStore="0" showInWebsite="0">
+                        <label><![CDATA[Pattern validation]]></label>
+                        <frontend_model>Fastly\Cdn\Block\System\Config\Form\Field\PatternValidationBtn</frontend_model>
+                    </field>
                     <field id="upload_vcl" translate="label comment" sortOrder="30" showInDefault="1" showInStore="0" showInWebsite="0">
                         <label><![CDATA[Automatic upload & service activation]]></label>
                         <frontend_model>Fastly\Cdn\Block\System\Config\Form\Field\UploadVclBtn</frontend_model>

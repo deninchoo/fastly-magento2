@@ -20,19 +20,17 @@
  */
 namespace Fastly\Cdn\Controller\Adminhtml\FastlyCdn;
 
-use Braintree\Exception;
 use Fastly\Cdn\Model\Config;
 use Fastly\Cdn\Model\Api;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
-use Fastly\Cdn\Helper\Vcl;
 use Fastly\Cdn\Model\Statistic;
 use Fastly\Cdn\Model\StatisticFactory;
 use Fastly\Cdn\Model\StatisticRepository;
 use Magento\Framework\Controller\Result\JsonFactory;
-use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Filesystem\DirectoryList;
 
-class TestConnection extends Action
+class PatternValidation extends Action
 {
     /**
      * @var \Fastly\Cdn\Model\Api
@@ -64,6 +62,10 @@ class TestConnection extends Action
      */
     private $statisticRepository;
 
+    private $directoryList;
+
+    private $reader;
+
     /**
      * TestConnection constructor.
      *
@@ -82,7 +84,8 @@ class TestConnection extends Action
         JsonFactory $resultJsonFactory,
         Statistic $statistic,
         StatisticFactory $statisticFactory,
-        StatisticRepository $statisticRepository
+        StatisticRepository $statisticRepository,
+        DirectoryList $directoryList
     ) {
         $this->api = $api;
         $this->config = $config;
@@ -90,48 +93,26 @@ class TestConnection extends Action
         $this->statistic = $statistic;
         $this->statisticFactory = $statisticFactory;
         $this->statisticRepository = $statisticRepository;
+        $this->directoryList = $directoryList;
 
         parent::__construct($context);
     }
 
-    /**
-     * @return $this|\Magento\Framework\App\ResponseInterface|\Magento\Framework\Controller\ResultInterface
-     */
+
     public function execute()
     {
         $result = $this->resultJsonFactory->create();
-        $serviceId = $this->getRequest()->getParam('service_id');
-        $apiKey = $this->getRequest()->getParam('api_key');
-
-        try {
-            if ($this->config->areWebHooksEnabled() && $this->config->canPublishConfigChanges()) {
-                $this->api->sendWebHook('*initiated test connection action*');
-            }
-
-            $service = $this->api->checkServiceDetails(true, $serviceId, $apiKey);
-            $sendValidationReq = $this->statistic->sendValidationRequest(true, $serviceId);
-            $this->saveValidationState(true, $sendValidationReq);
-        } catch (\Exception $e) {
-            $sendValidationReq = $this->statistic->sendValidationRequest(false, $serviceId);
-            $this->saveValidationState(false, $sendValidationReq);
-            return $result->setData([
-                'status'    => false,
-                'msg'       => $e->getMessage()
-            ]);
-        }
+        $path = 'json_templates/';
+        $moduleEtcPath = $this->config->getJsonTemplates();
+        $filePath = $moduleEtcPath . '/' . $path;
+        $json = file_get_contents($filePath . 'ttl.json');
+        $decodedJson = json_decode($json, true);
+        $templateData = $decodedJson['vcl']['0']['template'];
+        $entryTemplate = $decodedJson['properties']['0']['entryTemplate'];
 
         return $result->setData([
             'status'        => true,
-            'service_name'  => $service->name
+            'data'  => $templateData
         ]);
-    }
-
-    private function saveValidationState($serviceStatus, $gaRequestStatus)
-    {
-        $validationStat = $this->statisticFactory->create();
-        $validationStat->setAction(Statistic::FASTLY_VALIDATION_FLAG);
-        $validationStat->setSent($gaRequestStatus);
-        $validationStat->setState($serviceStatus);
-        $this->statisticRepository->save($validationStat);
     }
 }

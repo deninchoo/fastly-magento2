@@ -683,6 +683,12 @@ class Config extends \Magento\PageCache\Model\Config
         return strtr($data, $this->getReplacements());
     }
 
+    public function getJsonTemplates()
+    {
+        $moduleEtcPath = $this->reader->getModuleDir(Dir::MODULE_ETC_DIR, 'Fastly_Cdn');
+        return $moduleEtcPath;
+    }
+
     /**
      * Returns VCL snippet data
      *

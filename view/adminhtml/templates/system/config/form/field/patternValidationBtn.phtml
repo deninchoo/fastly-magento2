@@ -1,0 +1,18 @@
+<?php echo $block->getButtonHtml() ?>
+
+<?php
+$patternValidationUrl = $block->getUrl('adminhtml/fastlyCdn/patternValidation')
+?>
+
+<script type="text/x-magento-init">
+        {
+            "*": {
+                "Fastly_Cdn/js/patternvalidation": {
+                    "patternValidationUrl": "<?php echo $block->escapeJsQuote($patternValidationUrl);?>"
+                }
+            }
+        }
+</script>
+
+
+
